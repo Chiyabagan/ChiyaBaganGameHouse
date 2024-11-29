@@ -1,0 +1,40 @@
+body {
+    background-image: url('/image/img1.png'); /* Replace with your image path */
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    margin: 0;
+    padding: 0;
+    height: 100vh; /* Full viewport height */
+    z-index: 99999999;
+  }
+  
+  .text-shadow {
+    text-shadow: 
+      -2px -2px 0 black,
+      2px -2px 0 black,
+      -2px 2px 0 black,
+      2px 2px 0 black;
+  }
+  
+  .animate__animated.animate__flipInY {
+    --animate-duration: 2s;
+  }
+
+  .container{
+    padding-top: 50%;
+  }
+
+  #questions-container .card {
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.3);
+    border-radius: 10px;
+    margin-bottom: 15px;
+  }
+  #timer {
+    font-weight: bold;
+  }
+
+  #question-container-parent, #break-container{
+    width: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+  }

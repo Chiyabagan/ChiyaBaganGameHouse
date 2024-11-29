@@ -1,5 +1,5 @@
 body {
-    background-image: url('../image/img1.png'); /* Replace with your image path */
+    background-image: url('/ChiyaBaganGameHouse/image/img1.png'); /* Replace with your image path */
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;

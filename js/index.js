@@ -172,7 +172,7 @@ let timer;
 // Fetch questions from Open Trivia API
 async function fetchQuestions(category) {
     try {
-        const response = await fetch(`https://opentdb.com/api.php?amount=10&category=${category}&difficulty=medium&type=multiple`);
+        const response = await fetch(`https://opentdb.com/api.php?amount=10&category=${category}&difficulty=easy`);
         
         if (!response.ok) {
             console.error(`HTTP error: ${response.status}`);
@@ -241,30 +241,64 @@ function nextQuestion() {
     }
 }
   
+async function updateCorrectAnswerCount() {
+  try {
+    const userId = localStorage.getItem('id'); // Retrieve the user ID from localStorage
+    const userDocSnapshot = await getUserInFirestore(userId); // Get the user's document snapshot
+
+    if (userDocSnapshot) {
+      const userData = userDocSnapshot.data(); // Access document data
+      const currentCount = userData.correctAnswerCount || 0; // Default to 0 if the field is missing
+
+      // Update the correctAnswerCount
+      await updateDoc(userDocSnapshot.ref, {
+        correctAnswerCount: currentCount + 1,
+      });
+      console.log(`Correct answer count updated`);
+    } else {
+      console.error("User not found!");
+    }
+  } catch (error) {
+    console.error("Error updating correctAnswerCount:", error);
+  }
+}
+
+
 // End the game and show the result
 function endGame() {
     clearInterval(timer); // Stop the timer when the game ends
   
-    if (correctAnswers > 8) {
+    if (correctAnswers >= 1) {
       questionContainer.style.display='none';
       document.getElementById('timer').style.display = 'none';
-      document.getElementById('result').innerHTML = `<div class="card bg-success text-white p-5 animate__animated animate__flipInY "><h3 class="text-light">Congratulations !!! You have won a cup of tea. <br> Show this to Chiya Bagan Host</h3><button type="button" class="btn btn-success " id="ok-btn">Ok</button></div>`;
-      
-      // Update correctAnswerCount in Firebase
-    const userId = localStorage.getItem('id'); // Assuming user ID is stored in localStorage
-    const userDocRef = doc(db, "users", userId); // Reference to the user's document in Firestore
+      // Get the current date and time
+      const now = new Date();
+      const formattedDateTime = `${now.toLocaleDateString()} ${now.toLocaleTimeString()}`;
 
-    updateDoc(userDocRef, {
-        correctAnswerCount: increment(1) // Increment correctAnswerCount by 1
-    });
+      // Display the card with the date and time
+      document.getElementById('result').innerHTML = `
+        <div class="card bg-success text-white p-5 animate__animated animate__flipInY">
+          <h3 class="text-light">
+            Congratulations !!! You have won a cup of tea. <br> 
+            Show this to Chiya Bagan Host
+          </h3>
+          <p class="mt-3">Date & Time: ${formattedDateTime}</p>
+          <button type="button" class="btn btn-dark" id="ok-btn">Ok</button>
+        </div>
+      `;
+
+      const okBtn = document.getElementById('ok-btn');
+      // Event listener for the "Next" button
+      okBtn.addEventListener('click', (event) => {
+      if (event.target.id === 'ok-btn') {
+          window.location.reload();
+      }
+      }); 
+
+      // Update correctAnswerCount in Firebase
+      updateCorrectAnswerCount();
        
-    const okBtn = document.getElementById('ok-btn');
-        // Event listener for the "Next" button
-        okBtn.addEventListener('click', (event) => {
-        if (event.target.id === 'ok-btn') {
-            window.location.reload();
-        }
-        }); 
+   
     } else {
       questionContainer.style.display='none';
       document.getElementById('timer').style.display = 'none';
@@ -321,48 +355,55 @@ function displayNextQuestion() {
 
 function breakGame(type)
 {
-    let brk = '';
-    if(type==="brk")
-    {
-         brk =  `<div class="row justify-content-center">
+  // Hide user form and introduce a delay before the rest of the code
+userForm.style.display = 'none';
+
+// Introduce a 2-second delay before proceeding with the next block of code
+setTimeout(() => {
+  let brk = ''; // Initialize variable for break content
+
+  // Determine break type and create the appropriate HTML content
+  if (type === "brk") {
+    brk = `<div class="row justify-content-center">
         <div class="col">
-          <div class="card bg-dark p-4"><h3 class="text-light">We are at a break right now , <br> Comeback Later !!!</h3></div>
-           <button type="button" class="btn btn-success" id="ok-btn">Ok</button>
+          <div class="card bg-dark p-4"><h3 class="text-light">We are at a break right now , <br> Comeback Later !!!</h3>
+          <button type="button" class="btn btn-success" id="ok-btn">Ok</button>
+          </div>
         </div>
       </div>`;
-
-    } else if(type==="oneTimeDisplay")
-    {
-         brk =  `<div class="row justify-content-center animate__animated animate__flipInY">
+  } else if (type === "oneTimeDisplay") {
+    brk = `<div class="row justify-content-center animate__animated animate__flipInY">
         <div class="col">
           <div class="card bg-dark p-4"><h3 class="text-light">You can only play once a day, Comeback Later !!!</h3>
            <button type="button" class="btn btn-success" id="ok-btn">Ok</button>
           </div>
         </div>
       </div>`;
-    }
-    else
-    {
-        
-        brk =  `<div class="row justify-content-center animate__animated animate__flipInY">
+  } else {
+    brk = `<div class="row justify-content-center animate__animated animate__flipInY">
         <div class="col">
           <div class="card bg-dark p-4"><h3 class="text-light">Something went wrong<br> Please try again later !!!</h3>
            <button type="button" class="btn btn-success" id="ok-btn">Ok</button>
           </div>
         </div>
       </div>`;
-        
-    }
-    breakContainer.style.display = 'block';
-    breakContainer.innerHTML = brk;
+  }
 
-    const okBtn = document.getElementById('ok-btn');
-    // Event listener for the "Next" button
-    okBtn.addEventListener('click', (event) => {
+  // Display the break content after the delay
+  breakContainer.style.display = 'block';
+  breakContainer.innerHTML = brk;
+
+  // Event listener for the "Ok" button
+  const okBtn = document.getElementById('ok-btn');
+  okBtn.addEventListener('click', (event) => {
     if (event.target.id === 'ok-btn') {
-        window.location.reload();
+      window.location.reload(); // Reload the page when "Ok" is clicked
     }
-    }); 
+  });
+
+}, 1000); // 2-second delay (2000 milliseconds)
+
+ 
 }
 
 function checkPlayCount() {
@@ -388,8 +429,6 @@ function checkPlayCount() {
 
     // Check if user can play
     if (playCount >= 1) {
-        userForm.style.display = 'none';
-
          breakGame("oneTimeDisplay");
     }
 

@@ -268,7 +268,7 @@ async function updateCorrectAnswerCount() {
 function endGame() {
     clearInterval(timer); // Stop the timer when the game ends
   
-    if (correctAnswers >= 1) {
+    if (correctAnswers >= 8) {
       questionContainer.style.display='none';
       document.getElementById('timer').style.display = 'none';
       // Get the current date and time

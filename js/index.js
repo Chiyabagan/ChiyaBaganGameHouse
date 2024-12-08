@@ -240,6 +240,8 @@ function nextQuestion() {
       endGame(); // End the game if all questions are answered
     }
 }
+
+
   
 async function updateCorrectAnswerCount() {
   try {
@@ -302,7 +304,7 @@ function endGame() {
     } else {
       questionContainer.style.display='none';
       document.getElementById('timer').style.display = 'none';
-      document.getElementById('result').innerHTML = `<div class="card bg-dark text-white p-5 animate__animated animate__flipInY "><h3 class="text-white">Game Over. You didn't answer enough questions correctly!</h3> <button type="button" class="btn btn-danger" id="ok-btn">Ok</button></div>`;
+      document.getElementById('result').innerHTML = `<div class="card bg-dark text-white p-5 animate__animated animate__flipInY "><h3 class="text-white">Game Over. You answered ${correctAnswers} questions correctly. You need at least 8 to win. Comeback later to play !!!.</h3> <button type="button" class="btn btn-danger" id="ok-btn">Ok</button></div>`;
       const okBtn = document.getElementById('ok-btn');
         // Event listener for the "Next" button
         okBtn.addEventListener('click', (event) => {
@@ -312,6 +314,46 @@ function endGame() {
         }); 
     }
 }
+
+// Display the next question in the form of a card
+// function displayNextQuestion() {
+//   // Check if we've reached the end of the questions
+//   if (currentQuestionIndex >= totalQuestions) {
+//     return endGame();
+//   }
+
+//   const questionData = questions[currentQuestionIndex];
+//   const questionCard = `
+//     <div class="card bg-dark text-white p-4 animate__animated animate__slideInLeft">
+//       <h5 class="card-title">${questionData.question}</h5>
+//       <form id="question-form-${currentQuestionIndex}">
+//         <div class="mb-3">
+//           ${questionData.incorrect_answers.concat(questionData.correct_answer).sort().map((answer, idx) => `
+//             <div class="form-check">
+//               <input class="form-check-input" type="radio" name="answer" id="answer${idx}" value="${answer}">
+//               <label class="form-check-label" for="answer${idx}">
+//                 ${answer}
+//               </label>
+//             </div>
+//           `).join('')}
+//         </div>
+//         <button type="button" class="btn btn-success w-100" id="next-btn">Next</button>
+//       </form>
+//     </div>
+//   `;
+//   userForm.style.display = 'none';
+//   questionContainerParent.style.display = 'block';
+//   questionContainer.innerHTML = questionCard;
+  
+//     const nextBtn = document.getElementById('next-btn');
+//     // Event listener for the "Next" button
+//     nextBtn.addEventListener('click', (event) => {
+//     if (event.target.id === 'next-btn') {
+//         nextQuestion();
+//     }
+//     }); 
+
+// }  
 
 // Display the next question in the form of a card
 function displayNextQuestion() {
@@ -342,15 +384,38 @@ function displayNextQuestion() {
   userForm.style.display = 'none';
   questionContainerParent.style.display = 'block';
   questionContainer.innerHTML = questionCard;
-  
-    const nextBtn = document.getElementById('next-btn');
-    // Event listener for the "Next" button
-    nextBtn.addEventListener('click', (event) => {
-    if (event.target.id === 'next-btn') {
-        nextQuestion();
-    }
-    }); 
 
+  const nextBtn = document.getElementById('next-btn');
+  nextBtn.addEventListener('click', (event) => {
+    if (event.target.id === 'next-btn') {
+      const selectedAnswer = document.querySelector(`#question-form-${currentQuestionIndex} input[name="answer"]:checked`);
+      const correctAnswer = questionData.correct_answer;
+
+      if (selectedAnswer) {
+        const selectedLabel = selectedAnswer.parentElement.querySelector('label');
+
+        // Mark the selected answer
+        if (selectedAnswer.value === correctAnswer) {
+          selectedLabel.classList.add('bg-success', 'text-white', 'highlight'); // Highlight as correct
+        } else {
+          selectedLabel.classList.add('bg-danger', 'text-white', 'highlight'); // Highlight as incorrect
+        }
+
+        // Highlight the correct answer
+        const correctOption = document.querySelector(`#question-form-${currentQuestionIndex} input[value="${correctAnswer}"]`).parentElement.querySelector('label');
+        correctOption.classList.add('bg-success', 'text-white', 'highlight');
+        
+        // Disable all inputs after selection to prevent changes
+        const allOptions = document.querySelectorAll(`#question-form-${currentQuestionIndex} input[name="answer"]`);
+        allOptions.forEach(option => option.disabled = true);
+      }
+
+      // Delay moving to the next question to show the feedback
+      setTimeout(() => {
+        nextQuestion();
+      }, 2000); // 2-second delay
+    }
+  });
 }
 
 function breakGame(type)

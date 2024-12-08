@@ -38,3 +38,10 @@ body {
     width: 100%;
     background-color: rgba(0, 0, 0, 0.7);
   }
+
+  .highlight {
+    border-radius: 10px; /* Smooth rounded corners */
+    padding: 2px 3px;        /* Add some padding for better visibility */
+    transition: all 0.3s ease-in-out; /* Smooth color transition */
+  }
+  

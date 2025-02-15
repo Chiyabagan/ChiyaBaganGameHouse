@@ -172,7 +172,23 @@ let timer;
 // Fetch questions from Open Trivia API
 async function fetchQuestions(category) {
     try {
-        const response = await fetch(`https://opentdb.com/api.php?amount=10&category=${category}&difficulty=easy`);
+
+      const userId = localStorage.getItem('id'); // Retrieve the user ID from localStorage
+      const userDocSnapshot = await getUserInFirestore(userId); // Get the user's document snapshot
+      if(userDocSnapshot)
+      {
+        var userCorrectAnswerCount = userDocSnapshot.data().correctAnswerCount;
+        if(userCorrectAnswerCount >= 2)
+        {
+         const response = await fetch(`https://opentdb.com/api.php?amount=10&category=${category}&difficulty=hard`);
+        } else if(userCorrectAnswerCount >=1 && userCorrectAnswerCount <=2)
+        {
+         const response = await fetch(`https://opentdb.com/api.php?amount=10&category=${category}&difficulty=medium`);
+        } else
+        {
+         const response = await fetch(`https://opentdb.com/api.php?amount=10&category=${category}&difficulty=easy`);
+        }
+      }
         
         if (!response.ok) {
             console.error(`HTTP error: ${response.status}`);

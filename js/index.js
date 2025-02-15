@@ -115,7 +115,7 @@ setTimeout(() => {
       
     startButton.addEventListener('click', async () => {
 
-       checkPlayCount();
+        checkPlayCount();
 
         const existingId = localStorage.getItem('id'); // Check for existing ID in localStorage
         if (existingId) {

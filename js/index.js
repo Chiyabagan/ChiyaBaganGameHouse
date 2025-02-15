@@ -100,6 +100,7 @@ setTimeout(() => {
                 mobile,
                 category,
                 correctAnswerCount: 0,
+                playedDate:Date.UTC().toString
               });
             }
             if(category !=null)
@@ -114,7 +115,8 @@ setTimeout(() => {
     });
       
     startButton.addEventListener('click', async () => {
-        checkPlayCount();
+
+       checkPlayCount();
 
         const existingId = localStorage.getItem('id'); // Check for existing ID in localStorage
         if (existingId) {
@@ -143,7 +145,6 @@ setTimeout(() => {
           nameField.style.display = 'block';
           mobileField.style.display = 'block';
         }
-    
            
         // Dynamically adjust the 'required' attribute
         if (nameField.style.display === 'none' && mobileField.style.display === 'none') {
@@ -171,48 +172,51 @@ let timer;
 
 // Fetch questions from Open Trivia API
 async function fetchQuestions(category) {
-    try {
+  try {
+      const userId = localStorage.getItem('id'); // Retrieve user ID
+      const userDocSnapshot = await getUserInFirestore(userId); // Get user's document
 
-      const userId = localStorage.getItem('id'); // Retrieve the user ID from localStorage
-      const userDocSnapshot = await getUserInFirestore(userId); // Get the user's document snapshot
-      if(userDocSnapshot)
-      {
-        var userCorrectAnswerCount = userDocSnapshot.data().correctAnswerCount;
-        if(userCorrectAnswerCount >= 2)
-        {
-         const response = await fetch(`https://opentdb.com/api.php?amount=10&category=${category}&difficulty=hard`);
-        } else if(userCorrectAnswerCount >=1 && userCorrectAnswerCount <=2)
-        {
-         const response = await fetch(`https://opentdb.com/api.php?amount=10&category=${category}&difficulty=medium`);
-        } else
-        {
-         const response = await fetch(`https://opentdb.com/api.php?amount=10&category=${category}&difficulty=easy`);
-        }
+      if (userDocSnapshot.exists()) {
+        debugger;
+          let userCorrectAnswerCount = userDocSnapshot.data().correctAnswerCount;
+          let difficulty = "easy"; // Default difficulty
+
+          if (userCorrectAnswerCount >= 2) {
+              difficulty = "hard";
+          } else if (userCorrectAnswerCount >= 1) {
+              difficulty = "medium";
+          }
+
+          const response = await fetch(`https://opentdb.com/api.php?amount=10&category=${category}&difficulty=${difficulty}`);
+
+          if (!response.ok) {
+              console.error(`HTTP error: ${response.status}`);
+              if (response.status === 429) { // Too Many Requests
+                  breakGame("brk");
+                  return;
+              }
+          }
+          const data = await response.json();
+
+          if (!data || !data.results || data.results.length === 0) {
+              console.warn("No questions available or invalid response.");
+              breakGame("brk");
+              return;
+          }
+
+          // If questions are successfully fetched
+          questions = data.results;
+          displayNextQuestion();
+          startTimer();
+      } else {
+          console.warn("User document not found.");
+          breakGame("user");
       }
-        
-        if (!response.ok) {
-            console.error(`HTTP error: ${response.status}`);
-            if (response.status === 429) { // Too Many Requests
-                breakGame("brk");
-            }
-        }
-
-        const data = await response.json();
-
-        if (!data || !data.results || data.results.length === 0) {
-            console.warn("No questions available or invalid response.");
-            breakGame("brk");
-        }
-
-        // If questions are successfully fetched
-        questions = data.results;
-        displayNextQuestion();
-        startTimer();
-    } catch (error) {
-        breakGame("brk");
-    }
+  } catch (error) {
+      console.error("Error fetching questions:", error);
+      breakGame("brk");
+  }
 }
-
 
 let correctAnswers = 0; // To track the number of correct answers
 let totalQuestions = 10; // Total number of questions
@@ -257,8 +261,6 @@ function nextQuestion() {
     }
 }
 
-
-  
 async function updateCorrectAnswerCount() {
   try {
     const userId = localStorage.getItem('id'); // Retrieve the user ID from localStorage
@@ -280,7 +282,6 @@ async function updateCorrectAnswerCount() {
     console.error("Error updating correctAnswerCount:", error);
   }
 }
-
 
 // End the game and show the result
 function endGame() {
@@ -460,6 +461,14 @@ setTimeout(() => {
           </div>
         </div>
       </div>`;
+  }else if (type === "user") {
+    brk = `<div class="row justify-content-center animate__animated animate__flipInY">
+        <div class="col">
+          <div class="card bg-dark p-4"><h3 class="text-light">You have not yet registered, Please register and try again !!!</h3>
+           <button type="button" class="btn btn-success" id="ok-btn">Ok</button>
+          </div>
+        </div>
+      </div>`;
   } else {
     brk = `<div class="row justify-content-center animate__animated animate__flipInY">
         <div class="col">
@@ -484,7 +493,6 @@ setTimeout(() => {
 
 }, 1000); // 2-second delay (2000 milliseconds)
 
- 
 }
 
 function checkPlayCount() {

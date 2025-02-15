@@ -100,7 +100,6 @@ setTimeout(() => {
                 mobile,
                 category,
                 correctAnswerCount: 0,
-                playedDate:Date.UTC().toString
               });
             }
             if(category !=null)

@@ -22,7 +22,6 @@ setTimeout(() => {
 });
 
 
-
 // form submission handling 
   // Import Firebase SDKs
   import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
@@ -100,6 +99,8 @@ setTimeout(() => {
                 mobile,
                 category,
                 correctAnswerCount: 0,
+                lastPlayed : getFormattedTodayDate(),
+                lastWon : null
               });
             }
             if(category !=null)
@@ -114,7 +115,6 @@ setTimeout(() => {
     });
       
     startButton.addEventListener('click', async () => {
-
         checkPlayCount();
 
         const existingId = localStorage.getItem('id'); // Check for existing ID in localStorage
@@ -164,6 +164,30 @@ setTimeout(() => {
 
   });
 
+// async function updateAllUsers() {
+//     try {
+//         debugger;
+//         const usersCollection = collection(db, "users");
+//         const querySnapshot = await getDocs(usersCollection);
+
+//         querySnapshot.forEach(async (userDoc) => {
+//             const userRef = doc(db, "users", userDoc.id);
+//             const userData = userDoc.data();
+
+//             // Check if lastPlayed field already exists
+//             if (!userData.lastPlayed) {
+//                 await updateDoc(userRef, {
+//                     lastWon: null // Initialize lastPlayed as null
+//                 });
+//                 console.log(`Updated user: ${userDoc.id}`);
+//             }
+//         });
+
+//         console.log("All users updated successfully!");
+//     } catch (error) {
+//         console.error("Error updating users:", error);
+//     }
+// }
  
 let questions = [];
 let currentQuestionIndex = 0;
@@ -176,7 +200,6 @@ async function fetchQuestions(category) {
       const userDocSnapshot = await getUserInFirestore(userId); // Get user's document
 
       if (userDocSnapshot.exists()) {
-        debugger;
           let userCorrectAnswerCount = userDocSnapshot.data().correctAnswerCount;
           let difficulty = "easy"; // Default difficulty
 
@@ -219,7 +242,7 @@ async function fetchQuestions(category) {
 
 let correctAnswers = 0; // To track the number of correct answers
 let totalQuestions = 10; // Total number of questions
-let timeRemaining = 180; // Total time for the game in seconds (3 minutes)
+let timeRemaining = 150; // Total time for the game in seconds (3 minutes)
 
 // Start the 3-minute timer
 function startTimer() {
@@ -272,6 +295,7 @@ async function updateCorrectAnswerCount() {
       // Update the correctAnswerCount
       await updateDoc(userDocSnapshot.ref, {
         correctAnswerCount: currentCount + 1,
+        lastWon : getFormattedTodayDate()
       });
       console.log(`Correct answer count updated`);
     } else {
@@ -547,3 +571,12 @@ document.addEventListener('click', function (event) {
     }
   });
   
+
+function getFormattedTodayDate() {
+    const today = new Date();
+    const month = String(today.getMonth() + 1).padStart(2, "0"); // Ensure two digits
+    const day = String(today.getDate()).padStart(2, "0"); // Ensure two digits
+    const year = today.getFullYear();
+    
+    return `${month}-${day}-${year}`;
+}

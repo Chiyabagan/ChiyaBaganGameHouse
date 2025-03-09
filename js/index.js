@@ -242,9 +242,9 @@ async function fetchQuestions(category) {
 
 let correctAnswers = 0; // To track the number of correct answers
 let totalQuestions = 10; // Total number of questions
-let timeRemaining = 150; // Total time for the game in seconds (3 minutes)
+let timeRemaining = 100; // Total time for the game in seconds (1 minute 30 seconds)
 
-// Start the 3-minute timer
+// Start the 1-minute 30 seconds timer
 function startTimer() {
   const timeDisplay = document.getElementById('time-left');
   timer = setInterval(() => {
@@ -306,28 +306,82 @@ async function updateCorrectAnswerCount() {
   }
 }
 
+async function getUserWinningCount()
+{
+  const userId = localStorage.getItem('id'); // Retrieve user ID
+  const userDocSnapshot = await getUserInFirestore(userId); // Get user's document
+  if(userDocSnapshot.exists())
+  {
+    return userDocSnapshot.data().correctAnswerCount;
+  }
+}
 // End the game and show the result
 function endGame() {
-    clearInterval(timer); // Stop the timer when the game ends
   
-    if (correctAnswers >= 8) {
+    clearInterval(timer); // Stop the timer when the game ends
+    var winningCount = getUserWinningCount();
+  
+    if (correctAnswers == 10) {
       questionContainer.style.display='none';
       document.getElementById('timer').style.display = 'none';
       // Get the current date and time
       const now = new Date();
       const formattedDateTime = `${now.toLocaleDateString()} ${now.toLocaleTimeString()}`;
 
-      // Display the card with the date and time
+      if(winningCount >= 10)
+      {
+        // Display the card with the date and time
       document.getElementById('result').innerHTML = `
+      <div class="card bg-success text-white p-5 animate__animated animate__flipInY">
+        <h3 class="text-light">
+          You have won the quiz but we have detected use of google or AI (now or earlier)<br> 
+          You wont be eligible for a cup of tea. Keep playing :)
+        </h3>
+        <p class="mt-3">Date & Time: ${formattedDateTime}</p>
+        <button type="button" class="btn btn-dark" id="ok-btn">Ok</button>
+      </div>
+    `;
+      }
+      else if(winningCount >= 5)
+      {
+        document.getElementById('result').innerHTML = `
         <div class="card bg-success text-white p-5 animate__animated animate__flipInY">
           <h3 class="text-light">
-            Congratulations !!! You have won a cup of tea. <br> 
-            Show this to Chiya Bagan Host
+            Congratulations !!! You have won 5 rupees off for your cup of tea. <br> 
+            Show this to Chiya Bagan Host.
           </h3>
           <p class="mt-3">Date & Time: ${formattedDateTime}</p>
           <button type="button" class="btn btn-dark" id="ok-btn">Ok</button>
         </div>
       `;
+      }
+      else if(winningCount >= 3)
+        {
+          document.getElementById('result').innerHTML = `
+          <div class="card bg-success text-white p-5 animate__animated animate__flipInY">
+            <h3 class="text-light">
+              Congratulations !!! You have won 10 rupees off for your cup of tea. <br> 
+              Show this to Chiya Bagan Host
+            </h3>
+            <p class="mt-3">Date & Time: ${formattedDateTime}</p>
+            <button type="button" class="btn btn-dark" id="ok-btn">Ok</button>
+          </div>
+        `;
+        }
+      else if(winningCount >= 1) {
+             // Display the card with the date and time
+      document.getElementById('result').innerHTML = `
+      <div class="card bg-success text-white p-5 animate__animated animate__flipInY">
+        <h3 class="text-light">
+          Congratulations !!! You have won a cup of tea. <br> 
+          Show this to Chiya Bagan Host
+        </h3>
+        <p class="mt-3">Date & Time: ${formattedDateTime}</p>
+        <button type="button" class="btn btn-dark" id="ok-btn">Ok</button>
+      </div>
+    `;
+      }
+  
 
       const okBtn = document.getElementById('ok-btn');
       // Event listener for the "Next" button
@@ -344,7 +398,7 @@ function endGame() {
     } else {
       questionContainer.style.display='none';
       document.getElementById('timer').style.display = 'none';
-      document.getElementById('result').innerHTML = `<div class="card bg-dark text-white p-5 animate__animated animate__flipInY "><h3 class="text-white">Game Over. You answered ${correctAnswers} questions correctly. You need at least 8 to win. Comeback later to play !!!.</h3> <button type="button" class="btn btn-danger" id="ok-btn">Ok</button></div>`;
+      document.getElementById('result').innerHTML = `<div class="card bg-dark text-white p-5 animate__animated animate__flipInY "><h3 class="text-white">Game Over. You answered ${correctAnswers} questions correctly. You need all answers correct to win. Comeback later to play !!!.</h3> <button type="button" class="btn btn-danger" id="ok-btn">Ok</button></div>`;
       const okBtn = document.getElementById('ok-btn');
         // Event listener for the "Next" button
         okBtn.addEventListener('click', (event) => {
@@ -571,7 +625,6 @@ document.addEventListener('click', function (event) {
     }
   });
   
-
 function getFormattedTodayDate() {
     const today = new Date();
     const month = String(today.getMonth() + 1).padStart(2, "0"); // Ensure two digits
